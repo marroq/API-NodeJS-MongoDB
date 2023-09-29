@@ -1,3 +1,7 @@
-const Clients = require('./../Models/Client')
+const Clients = require('./../models/Client')
+
+const Client = {
+    
+}
 
 module.exports = Client

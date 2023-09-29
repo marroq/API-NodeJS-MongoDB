@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Clients = mongoose.model('Client', {
     name: {
         type: String,
