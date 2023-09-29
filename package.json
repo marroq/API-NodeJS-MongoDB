@@ -1,0 +1,26 @@
+{
+  "name": "API-NodeJS-MongoDB",
+  "version": "1.0.0",
+  "description": "You have to install the following dependencies to run this API.",
+  "main": "index.js",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marroq/API-NodeJS-MongoDB.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marroq/API-NodeJS-MongoDB/issues"
+  },
+  "homepage": "https://github.com/marroq/API-NodeJS-MongoDB#readme"
+}
