@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Clients = mongoose.model('Client', {
+const Users = mongoose.model('User', {
     name: {
         type: String,
         required: true,
@@ -13,4 +13,4 @@ const Clients = mongoose.model('Client', {
     }
 })
 
-module.exports = Clients
+module.exports = Users
