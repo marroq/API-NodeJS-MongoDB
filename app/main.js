@@ -11,9 +11,55 @@ const loadTemplate = () => {
             <label>LastName: </label>
             <input name="lastName"/>
         </div>
-        <button type="submit">Enter</button>
+        <button type="submit">Search</button>
     </form>
     <ul id="user-list"></ul>
+    `
+
+    const body = document.getElementsByTagName('body')[0];
+    body.innerHTML = template;
+}
+
+const loadRegisterTemplate = () => {
+    const template = 
+    `
+    <h1>Register</h1>
+    <form id="register-form">
+        <div>
+            <label>User Name: </label>
+            <input name="username"/>
+        </div>
+        <div>
+            <label>Password: </label>
+            <input name="password" type="password"/>
+        </div>
+        <button type="submit">Register</button>
+    </form>
+    <a href="#" id="login">Log In</a>
+    <div id="err"></div>
+    `
+
+    const body = document.getElementsByTagName('body')[0];
+    body.innerHTML = template;
+}
+
+const loadLoginTemplate = () => {
+    const template = 
+    `
+    <h1>Login</h1>
+    <form id="login-form">
+        <div>
+            <label>User Name: </label>
+            <input name="username"/>
+        </div>
+        <div>
+            <label>Password: </label>
+            <input name="password" type="password"/>
+        </div>
+        <button type="submit">Log in</button>
+    </form>
+    <a href="#" id="register">Sign up</a>
+    <div id="err"></div>
     `
 
     const body = document.getElementsByTagName('body')[0];
@@ -76,13 +122,107 @@ const addFormListener = () => {
     }
 }
 
+const addLoginListener = () => {
+    const loginForm = document.getElementById('login-form');
+
+    loginForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/login', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const responseData = await response.json();
+
+        if(response.status == 401 || response.status == 500) {
+            const error = document.getElementById('err');
+            error.innerHTML = responseData;
+        } else {
+            console.log(responseData["jwt"]);
+        }
+    }
+}
+
+const goToRegisterListener = () => {
+    const goToRegister = document.getElementById('register');
+
+    goToRegister.onclick = (e) => {
+        e.preventDefault();
+        registerPage();
+    }
+}
+
 const resetStatus = () => {
     getUsers();
     removeUser();
 }
 
-window.onload = () => {
+const loadMenu = () => {
     loadTemplate();
     addFormListener();
     resetStatus();
+}
+
+const addRegisterListener = ()  => {
+    const registerForm = document.getElementById('register-form');
+
+    registerForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(registerForm);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/register', {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const responseData = await response.text();
+
+        if(response.status == 401 || response.status == 500) {
+            const error = document.getElementById('err');
+            error.innerHTML = responseData;
+        } else {
+            loginPage();
+        }
+    }
+}
+
+const goToLoginListener = ()  => {
+    const goToLogin = document.getElementById('login');
+
+    goToLogin.onclick = (e) => {
+        e.preventDefault();
+        loginPage();
+    }
+}
+
+const registerPage = () => {
+    loadRegisterTemplate();
+    addRegisterListener();
+    goToLoginListener();
+}
+
+const loginPage = () => {
+    loadLoginTemplate();
+    addLoginListener();
+    goToRegisterListener();
+}
+
+const checkLogin = () => localStorage.getItem("token");
+
+window.onload = () => {
+    const isLoggedIn = checkLogin();
+
+    if (isLoggedIn) {
+        loadMenu();
+    } else {
+        loginPage();
+    }
 }
