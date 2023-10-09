@@ -1,4 +1,4 @@
-const loadTemplate = () => {
+const showUsersTemplate = () => {
     const template = 
     `
     <h1>Users</h1>
@@ -67,7 +67,11 @@ const loadLoginTemplate = () => {
 }
 
 const getUsers = async () => {
-    const response = await fetch('/users');
+    const response = await fetch('/users', {
+        headers: {
+            Authorization: `${localStorage.getItem('token')}`,
+        }
+    });
     const users = await response.json();
     const template = user => `
         <li>
@@ -80,7 +84,11 @@ const getUsers = async () => {
 }
 
 const removeUser = async () => {
-    const response = await fetch('/users');
+    const response = await fetch('/users', {
+        headers: {
+            Authorization: `${localStorage.getItem('token')}`,
+        }
+    });
     const users = await response.json();
 
     users.forEach(user => {
@@ -88,6 +96,9 @@ const removeUser = async () => {
         userNode.onclick = async (e) => {
             const response = await fetch(`/users/${user._id}`, {
                 method: 'DELETE',
+                headers: {
+                    Authorization: `${localStorage.getItem('token')}`,
+                }
             })
             
             if (response.status == 204) {
@@ -109,7 +120,8 @@ const addFormListener = () => {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                Authorization: `${localStorage.getItem('token')}`,
             }
         })
 
@@ -144,6 +156,8 @@ const addLoginListener = () => {
             error.innerHTML = responseData;
         } else {
             console.log(responseData["jwt"]);
+            localStorage.setItem('token', `Bearer ${responseData["jwt"]}`);
+            loadMenu();
         }
     }
 }
@@ -163,7 +177,7 @@ const resetStatus = () => {
 }
 
 const loadMenu = () => {
-    loadTemplate();
+    showUsersTemplate();
     addFormListener();
     resetStatus();
 }
