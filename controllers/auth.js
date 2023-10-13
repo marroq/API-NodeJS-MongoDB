@@ -8,7 +8,14 @@ const { expressjwt: expressJwt } = require('express-jwt');
 
 const validateJwt = expressJwt({
     secret: process.env.SECRET,
-    algorithms: ['HS256']
+    algorithms: ['HS256'],
+    onExpired: async (req, err) => {
+        if(err.status == 401) {
+            console.log("JWT has expired")
+        }
+
+        throw(err)
+    }
 });
 
 const signToken = (_id) => jwt.sign(
@@ -31,7 +38,17 @@ const assignUser = async (request, response, next) => {
     }
 }
 
-const isAuthenticated = express.Router().use(validateJwt, assignUser);
+const jwtExpirationValidation = (err, request, response, next) => {
+    if (err) {
+        if(err.status == 401) {
+            return response.status(err.status).send({ err: 'jwt expired'})
+        }
+    }
+
+    next();
+}
+
+const isAuthenticated = express.Router().use(validateJwt, jwtExpirationValidation, assignUser);
 
 const Auth = {
     register: async (request, response) => {
@@ -50,7 +67,7 @@ const Auth = {
             const signed = signToken(user._id);
             response.status(200).send({ message: `User ${body.username} created successfully` });
         } catch(err) {
-            response.status(500).send({ err: err.mesasge });
+            response.status(500).send({ err: err.message });
         }
     },
     login: async (request, response) => {
@@ -70,7 +87,6 @@ const Auth = {
                 response.status(401).send({ message: 'Invalid user or password'});
             }
         } catch(err) {
-            console.log(err)
             response.status(500).send({ err: err.message });
         }
     }

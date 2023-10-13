@@ -26,6 +26,13 @@ npm i -S bcrypt jsonwebtoken express-jwt
 
 The applition is running in port 3000 with the following methods:
 
+### Environment Variables
+
+Create a `.env` file and add the following variables
+
+* `MONGO_URI`: connection string to MongoDB
+* `SECRET`: secret to sign and validate jwt
+
 ### Authentication
 
 * Register a new user.

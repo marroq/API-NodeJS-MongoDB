@@ -66,83 +66,28 @@ const loadLoginTemplate = () => {
     body.innerHTML = template;
 }
 
-const getUsers = async () => {
-    const response = await fetch('/users', {
-        headers: {
-            Authorization: `${localStorage.getItem('token')}`,
-        }
-    });
-    const users = await response.json();
-    const template = user => `
-        <li>
-            ${user.name} ${user.lastName} <button data-id="${user._id}">Remove</button>
-        </li>
-    `
+const checkLogin = () => localStorage.getItem("token");
 
-    const userList = document.getElementById('user-list');
-    userList.innerHTML = users.map(user => template(user)).join('');
-}
-
-const removeUser = async () => {
-    const response = await fetch('/users', {
-        headers: {
-            Authorization: `${localStorage.getItem('token')}`,
-        }
-    });
-    const users = await response.json();
-
-    users.forEach(user => {
-        const userNode = document.querySelector(`[data-id="${user._id}"]`)
-        userNode.onclick = async (e) => {
-            const response = await fetch(`/users/${user._id}`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `${localStorage.getItem('token')}`,
-                }
-            })
-            
-            if (response.status == 204) {
-                userNode.parentNode.remove();
-                alert('Element deleted successfully');
-            }
-        }
-    })
-}
-
-const addFormListener = () => {
-    const userForm = document.getElementById('user-form')
-    userForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(userForm);
-        const data = Object.fromEntries(formData.entries());
-        
-        const response = await fetch('/users', {
-            method: 'POST',
-            body: JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `${localStorage.getItem('token')}`,
-            }
-        })
-
-        if (response.status == 201) {
-            console.log(`User ${data} created`);
-        }
-        
-        userForm.reset();
-        resetStatus();
+const responseStatusValidation = (response) => {
+    switch(response.status) {
+        case 401:
+            localStorage.removeItem('token');
+            loginPage();
+            return false;
+        default:
+            return true;
     }
 }
 
-const addLoginListener = () => {
-    const loginForm = document.getElementById('login-form');
+const authListener = (action) => {
+    const form = document.getElementById(`${action}-form`);
 
-    loginForm.onsubmit = async (e) => {
+    form.onsubmit = async (e) => {
         e.preventDefault();
-        const formData = new FormData(loginForm);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        const response = await fetch('/login', {
+        const response = await fetch(`/${action}`, {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
@@ -153,89 +98,154 @@ const addLoginListener = () => {
 
         if(response.status == 401 || response.status == 500) {
             const error = document.getElementById('err');
-            error.innerHTML = responseData;
+            error.innerHTML = responseData["err"];
         } else {
-            console.log(responseData["jwt"]);
-            localStorage.setItem('token', `Bearer ${responseData["jwt"]}`);
-            loadMenu();
+            switch(action) {
+                case "login":
+                    localStorage.setItem('token', `Bearer ${responseData["jwt"]}`);
+                    loadUsersPage();
+                    break;
+                case "register":
+                    loginPage();
+                    break;
+            }
         }
     }
 }
 
-const goToRegisterListener = () => {
-    const goToRegister = document.getElementById('register');
+const getUsers = async () => {
+    try {
+        const response = await fetch('/users', {
+            headers: {
+                Authorization: `${localStorage.getItem('token')}`,
+            }
+        });
+        
+        if(!responseStatusValidation(response)) {
+            return;
+        }
 
-    goToRegister.onclick = (e) => {
-        e.preventDefault();
-        registerPage();
+        const users = await response.json();
+        const template = user => 
+        `
+            <li>
+                ${user.name} ${user.lastName} <button data-id="${user._id}">Remove</button>
+            </li>
+        `
+
+        const userList = document.getElementById('user-list');
+        userList.innerHTML = users.map(user => template(user)).join('');
+    } catch(err) {
+        console.log(err)
     }
 }
 
-const resetStatus = () => {
-    getUsers();
-    removeUser();
+const removeUser = async () => {
+    try {
+        const response = await fetch('/users', {
+            headers: {
+                Authorization: `${localStorage.getItem('token')}`,
+            }
+        });
+    
+        if(!responseStatusValidation(response)) {
+            return;
+        }
+    
+        const users = await response.json();
+        users.forEach(user => {
+            const userNode = document.querySelector(`[data-id="${user._id}"]`)
+            userNode.onclick = async (e) => {
+                if (!confirm("Are you sure?")) return;
+                
+                const response = await fetch(`/users/${user._id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `${localStorage.getItem('token')}`,
+                    }
+                })
+                
+                if (response.status == 204) {
+                    userNode.parentNode.remove();
+                    alert('Element deleted successfully');
+                }
+            }
+        })
+    } catch(err) {
+        console.log(err)
+    }
 }
 
-const loadMenu = () => {
-    showUsersTemplate();
-    addFormListener();
-    resetStatus();
-}
-
-const addRegisterListener = ()  => {
-    const registerForm = document.getElementById('register-form');
-
-    registerForm.onsubmit = async (e) => {
+const addFormListener = () => {
+    const userForm = document.getElementById('user-form')
+    
+    userForm.onsubmit = async (e) => {
         e.preventDefault();
-        const formData = new FormData(registerForm);
+        const formData = new FormData(userForm);
         const data = Object.fromEntries(formData.entries());
 
-        const response = await fetch('/register', {
+        const response = await fetch('/users', {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json',
+                Authorization: `${localStorage.getItem('token')}`,
             }
-        });
-        const responseData = await response.text();
+        })
 
-        if(response.status == 401 || response.status == 500) {
-            const error = document.getElementById('err');
-            error.innerHTML = responseData;
-        } else {
-            loginPage();
+        if (response.status == 201) {
+            console.log(`User ${data["name"]} ${data["lastName"]} created`);
+        }
+        
+        userForm.reset();
+        reload();
+    }
+}
+
+const goToForm = (action) => {
+    const goto = document.getElementById(action);
+
+    goto.onclick = (e) => {
+        e.preventDefault();
+        switch(action) {
+            case 'register':
+                registerPage();
+                break;
+            default:
+                loginPage();
+                break;
         }
     }
 }
 
-const goToLoginListener = ()  => {
-    const goToLogin = document.getElementById('login');
+const reload = () => {
+    getUsers();
+    removeUser();
+}
 
-    goToLogin.onclick = (e) => {
-        e.preventDefault();
-        loginPage();
-    }
+const loadUsersPage = () => {
+    showUsersTemplate();
+    addFormListener();
+    reload();
 }
 
 const registerPage = () => {
     loadRegisterTemplate();
-    addRegisterListener();
-    goToLoginListener();
+    authListener('register');
+    goToForm('login');
 }
 
 const loginPage = () => {
     loadLoginTemplate();
-    addLoginListener();
-    goToRegisterListener();
+    authListener('login');
+    goToForm('register');
 }
-
-const checkLogin = () => localStorage.getItem("token");
 
 window.onload = () => {
     const isLoggedIn = checkLogin();
 
     if (isLoggedIn) {
-        loadMenu();
+        loadUsersPage();
     } else {
         loginPage();
     }
