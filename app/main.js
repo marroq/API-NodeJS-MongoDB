@@ -1,3 +1,14 @@
+const loadCSS = () => {
+    const head = document.getElementsByTagName('head')[0];
+    const link = document.createElement('link');
+
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'styles.css';
+
+    head.appendChild(link);
+}
+
 const showUsersTemplate = () => {
     const template = 
     `
@@ -14,6 +25,7 @@ const showUsersTemplate = () => {
         <button type="submit">Search</button>
     </form>
     <ul id="user-list"></ul>
+    <button id="logout" type="submit">Log out</button>
     `
 
     const body = document.getElementsByTagName('body')[0];
@@ -218,9 +230,22 @@ const goToForm = (action) => {
     }
 }
 
+const logout = () => {
+    const session = document.getElementById('logout');
+    console.log('load function')
+
+    session.onclick = (e) => {
+        e.preventDefault();
+        localStorage.removeItem('token');
+        console.log('execution function')
+        loginPage();
+    }
+}
+
 const reload = () => {
     getUsers();
     removeUser();
+    logout();
 }
 
 const loadUsersPage = () => {
@@ -242,8 +267,9 @@ const loginPage = () => {
 }
 
 window.onload = () => {
+    loadCSS();
+    
     const isLoggedIn = checkLogin();
-
     if (isLoggedIn) {
         loadUsersPage();
     } else {
